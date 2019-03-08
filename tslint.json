@@ -32,7 +32,10 @@
                },
                "esSpecCompliant": true
             }
-        ]
+        ],
+        "array-type": false,
+        "max-classes-per-file": false,
+        "no-empty": false
     },
     "rulesDirectory": []
 }
