@@ -1,0 +1,44 @@
+{
+    "name": "task-farmer",
+    "version": "0.0.1",
+    "description": "",
+    "main": "build/index.js",
+    "types": "build/index.d.ts",
+    "scripts": {
+        "start": "ts-node ./src/test/integration.ts",
+        "start:watch": "nodemon",
+        "clean": "rm -rf build/*",
+        "build": "tsc",
+        "clean-build": "rm -rf build/* && tsc",
+        "build:watch": "tsc --watch",
+        "clean-build:watch": "rm -rf build/* && tsc --watch",
+        "prepublishOnly": "npm test && npm run build",
+        "lint": "tslint -c tslint.json 'src/**/*.{ts,tsx}'",
+        "pretest": "npm run lint",
+        "test": "jest",
+        "test:watch": "jest --watch"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://grademark@github.com/grademark/task-farmer.git"
+    },
+    "keywords": [],
+    "author": "ashley@codecapers.com.au",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/grademark/task-farmer/issues"
+    },
+    "homepage": "https://github.com/grademark/task-farmer#readme",
+    "dependencies": {},
+    "devDependencies": {
+        "@types/jest": "^24.0.6",
+        "@types/node": "10.11.4",
+        "jest": "^24.1.0",
+        "nodemon": "^1.18.10",
+        "source-map-support": "0.5.9",
+        "ts-jest": "^23.10.5",
+        "ts-node": "7.0.1",
+        "tslint": "^5.12.1",
+        "typescript": "^3.1.1"
+    }
+}
