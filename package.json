@@ -1,6 +1,6 @@
 {
     "name": "task-farmer",
-    "version": "0.0.3",
+    "version": "0.0.4",
     "description": "",
     "main": "build/index.js",
     "types": "build/index.d.ts",
@@ -23,7 +23,21 @@
         "type": "git",
         "url": "git+https://grademark@github.com/grademark/task-farmer.git"
     },
-    "keywords": [],
+    "keywords": [
+        "task",
+        "parallel",
+        "parallel-computing",
+        "parallel-programming",
+        "parallel-processing",
+        "data",
+        "data-transform",
+        "data-processing",
+        "data-processing-system",
+        "multi-core",
+        "multi-process",
+        "cluster",
+        "cluster-computing"
+    ],
     "author": "ashley@codecapers.com.au",
     "license": "MIT",
     "bugs": {
