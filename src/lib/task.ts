@@ -122,6 +122,13 @@ export class Task<ResultT> implements ITask<ResultT> {
     }
 
     //
+    // Run multiple tasks in parallel and collect their results as an array.
+    //
+    public static all<ResultT>(inputTasks: ITask<ResultT>[]): ITask<ResultT[]> {
+        return new AllTask<ResultT>(inputTasks);
+    }
+
+    //
     // Lookup table for tasks.
     // Allows task to be found by name when request to run in a worker process.
     //
@@ -208,4 +215,39 @@ class WrappedValue implements ITask<any> {
         return this.value;
     }
 
+}
+//
+// A task that aggregates a list of tasks.
+//
+class AllTask<ResultT> implements ITask<ResultT[]> {
+
+    //
+    // The input tasks to be aggregated.
+    //
+    private inputTasks: ITask<ResultT>[];
+
+    constructor(inputTasks: ITask<ResultT>[]) {
+        this.inputTasks = inputTasks;
+    }
+
+     //
+    // Retreive the unique ID for the task.
+    //
+    public getTaskId(): string {
+        return "all"; // This doesn't need a distinct ID because it's not to be transmitted to a worker process.
+    }
+
+    //
+    // Retreive the task definition.
+    //
+    public getTaskDef(): ITaskDef<ResultT[]> {
+        return new TaskDef<any>("all", async () => {}); //TODO: Is there a better design that doesn't need these fake implementations?
+    }
+
+    //
+    // Simply returns the wrapped value.
+    //
+    public async run(scheduler: IScheduler): Promise<ResultT[]> {
+        return await Promise.all(this.inputTasks.map(inputTask => inputTask.run(scheduler)));
+    }
 }

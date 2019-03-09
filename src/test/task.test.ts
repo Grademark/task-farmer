@@ -127,4 +127,44 @@ describe("task", () => {
         expect(mockScheduler.runTask).toHaveBeenCalledTimes(1);
         expect(mockInputTask.run).toHaveBeenCalledTimes(1);
     });
+
+    it("can run sequence of tasks", async () => {
+        const mockInput1 = { input: 1 };
+        const mockInputTask1: any = {
+            run: jest.fn(async () => mockInput1),
+        };
+
+        const mockInput2 = { input: 2 };
+        const mockInputTask2: any = {
+            run: jest.fn(async () => mockInput2),
+        };
+        
+        const allTask = Task.all([mockInputTask1, mockInputTask2]);
+        expect(allTask).toBeDefined();
+
+        const mockScheduler: any = {
+            runTask: jest.fn((inputs, task) => {
+                throw new Error("This should be called in this test.");
+            }),
+        };
+
+        const result = await allTask.run(mockScheduler);
+        expect(result.length).toBe(2);
+        expect(result[0]).toBe(mockInput1);
+        expect(result[1]).toBe(mockInput2);
+    });
+
+    it("can run sequence of tasks with no tasks", async () => {
+        const allTask = Task.all([]);
+        expect(allTask).toBeDefined();
+
+        const mockScheduler: any = {
+            runTask: jest.fn((inputs, task) => {
+                throw new Error("This should be called in this test.");
+            }),
+        };
+
+        const result = await allTask.run(mockScheduler);
+        expect(result.length).toBe(0);
+    });
 });
