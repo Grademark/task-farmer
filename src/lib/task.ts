@@ -21,7 +21,7 @@ export interface ITaskDef<ResultT> {
     //
     // Instantiate a task from the definition.
     //
-    create(...inputTasks: any[]): ITask<ResultT>;
+    create(...inputs: any[]): ITask<ResultT>;
 }
 
 //
@@ -57,8 +57,23 @@ class TaskDef<ResultT> implements ITaskDef<ResultT> {
     //
     // Instantiate a task from the definition.
     //
-    public create(...inputTasks: ITask<any>[]): ITask<ResultT> {
-        return new Task<ResultT>(inputTasks, this);
+    public create(...inputs: any[]): ITask<ResultT> {
+        const wrappedTasks = inputs.map(this.wrapTask); // Wrap direct inputs as tasks.
+        return new Task<ResultT>(wrappedTasks, this);
+    }
+
+    //
+    // Wrap direct values in tasks where necessary.
+    //
+    private wrapTask(input: any) {
+        if (typeof(input.run) === "function") {
+            // It's a task.
+            return input;
+        }
+        else {
+            // It's a direct value, so wrap it in a task.
+            return new WrappedValue(input);
+        }
     }
 }
 
@@ -156,4 +171,41 @@ export class Task<ResultT> implements ITask<ResultT> {
         const inputs = await Promise.all(this.inputTasks.map(inputTask => inputTask.run(scheduler)));
         return await scheduler.runTask(inputs, this);
     }
+}
+
+//
+// A task that wraps up a direct value.
+//
+class WrappedValue implements ITask<any> {
+
+    //
+    // The value being wrapped as a task.
+    //
+    private value: any;
+
+    constructor(value: any) {
+        this.value = value;
+    }
+
+     //
+    // Retreive the unique ID for the task.
+    //
+    public getTaskId(): string {
+        return "wrapped"; // This doesn't need a distinct ID because it's not to be transmitted to a worker process.
+    }
+
+    //
+    // Retreive the task definition.
+    //
+    public getTaskDef(): ITaskDef<any> {
+        return new TaskDef<any>("wrapped", async () => {});
+    }
+
+    //
+    // Simply returns the wrapped value.
+    //
+    public run(scheduler: IScheduler): Promise<any> {
+        return this.value;
+    }
+
 }

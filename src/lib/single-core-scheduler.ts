@@ -10,7 +10,7 @@ export class SingleCoreScheduler implements IScheduler {
     //
     // Just runs the task inline on the same CPU..
     //
-    async runTask(inputs: any[], task: ITask<any>): Promise<any> {
+    public async runTask(inputs: any[], task: ITask<any>): Promise<any> {
         const taskFn = task.getTaskDef().getTaskFn();
         return await taskFn(...inputs);
     }

@@ -59,7 +59,7 @@ async function main(scheduler: IScheduler) {
 async function bootstrap() {
     const numWorkers = os.cpus().length; // Create one worker per CPU.
     const scheduler = new ClusterScheduler(numWorkers, { verbose: true }); // Create a Node.js cluster of X worker processes.
-    scheduler.init(() => main(scheduler)); // Let the scheduler call our main process.
+    await scheduler.init(() => main(scheduler)); // Let the scheduler call our main process.
 }
 
 bootstrap()

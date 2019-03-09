@@ -1,12 +1,13 @@
 {
     "name": "task-farmer",
-    "version": "0.0.1",
+    "version": "0.0.3",
     "description": "",
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "scripts": {
-        "start": "ts-node ./src/test/integration.1.ts",
-        "start:watch": "nodemon",
+        "test1": "ts-node ./src/test/integration.1.ts",
+        "test2": "ts-node ./src/test/integration.2.ts",
+        "test1:watch": "nodemon",
         "clean": "rm -rf build/*",
         "build": "tsc",
         "clean-build": "rm -rf build/* && tsc",
