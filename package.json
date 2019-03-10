@@ -1,12 +1,13 @@
 {
     "name": "task-farmer",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "",
     "main": "build/index.js",
     "types": "build/index.d.ts",
     "scripts": {
-        "test1": "ts-node ./src/test/integration.1.ts",
-        "test2": "ts-node ./src/test/integration.2.ts",
+        "test1": "ts-node ./src/examples/multi-core.1.ts",
+        "test2": "ts-node ./src/examples/multi-core.2.ts",
+        "test3": "ts-node ./src/examples/single-core.ts",
         "test1:watch": "nodemon",
         "clean": "rm -rf build/*",
         "build": "tsc",

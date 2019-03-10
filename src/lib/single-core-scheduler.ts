@@ -12,6 +12,6 @@ export class SingleCoreScheduler implements IScheduler {
     //
     public async runTask(inputs: any[], task: ITask<any>): Promise<any> {
         const taskFn = task.getTaskDef().getTaskFn();
-        return await taskFn(...inputs);
+        return await taskFn(...inputs, this);
     }
 }

@@ -30,7 +30,12 @@ export interface IWorkerRecord {
     //
     // Records how many tasks a worker is running.
     //
-    busy: number;
+    allocations: number;
+
+    //
+    // Records the maximum number of tasks a worker can run.
+    //
+    maxAllocations: number;
 
     //
     // The Node.js cluster object that represents the worker.
@@ -168,16 +173,66 @@ export class ClusterScheduler implements IScheduler {
     // Rejects the promise if the task throws an error.
     //
     public runTask(inputs: any[], task: ITask<any>): Promise<any> {
-        
-        this.verbose(`Queuing task ${task.getTaskDef().getTaskName()} (${task.getTaskId()}).`);
 
+        if (cluster.isWorker) {
+            return this.sendTask(task, inputs);
+        }
+        else {
+            const taskId = task.getTaskId();
+            const taskName = task.getTaskDef().getTaskName();
+            return this.queueTask(inputs, taskId, taskName);
+        }
+    }
+
+    //
+    // Send a task to the master to be queued.
+    //
+    private sendTask(task: ITask<any>, inputs: any[]): Promise<void> {
+        if (!cluster.isWorker) {
+            throw new Error("Expect sendTask to only run on a worker.");
+        }
+
+        const taskId = task.getTaskId();
+        const taskName = task.getTaskDef().getTaskName();
+        this.verbose(`Sending task ${taskName} (${taskId}) to master.`);
+        // Track the task so that the promise can be resolved once it's done.
         const taskPromise = new Promise<any>((resolve, reject) => {
-            this.taskQueue.push({ // Push the task in the queue to be executed when workers become available.
-                inputs, // Direct inputs to copy to the worker and feed to the task.
-                taskId: task.getTaskId(), // Save the task ID so we can reconcile the result on the master after task has complete.
-                taskName: task.getTaskDef().getTaskName(), // We need to save the task name, that's how we look up the task to run it on the worker.
-                resolve, // Save the promise resolve and reject functions so we can 
-                reject,  // resolve or reject the promise later when the task completes or errors.
+            this.pendingTasks[taskId] = {
+                inputs,
+                taskId,
+                taskName,
+                resolve,
+                reject,
+            };
+        });
+        // Send the task to the master.
+        process.send!({
+            type: "queue-task",
+            inputs,
+            taskId,
+            taskName,
+            workerId: process.env.WORKER_ID,
+        });
+
+        return taskPromise;
+    }
+
+    //
+    // Queue a task on the master.
+    //
+    private queueTask(inputs: any[], taskId: string, taskName: string): Promise<any> {
+        if (!cluster.isMaster) {
+            throw new Error("Expect queueTask to only run on the master.");
+        }
+
+        this.verbose(`Queuing task ${taskName} (${taskId}) on master.`);
+        const taskPromise = new Promise<any>((resolve, reject) => {
+            this.taskQueue.push({
+                inputs,
+                taskId,
+                taskName,
+                resolve,
+                reject,
             });
         });
 
@@ -203,15 +258,16 @@ export class ClusterScheduler implements IScheduler {
         this.workerMap[workerId] = {
             workerIndex,
             workerId, 
-            busy: 0,
+            allocations: 0,
+            maxAllocations: 1, //TOOD: Should be able to pass this in.
             worker,
         };
 
         worker.on("message", msg => {
 
-            if (msg.type === "task-complete") { // A task has completed.
+            if (msg.type === "task-complete") { // Worker notifying master that a task has completed.
 
-                this.workerMap[workerId].busy -= 1;
+                this.workerMap[workerId].allocations -= 1;
                 const taskRecord = this.pendingTasks[msg.taskId];
                 this.verbose(`Task ${taskRecord.taskName} (${taskRecord.taskId}) has completed.`);
 
@@ -220,8 +276,8 @@ export class ClusterScheduler implements IScheduler {
 
                 this.scheduleTasks(); // Worker is now free, schedule more tasks.
             }
-            else if (msg.type === "task-error") { // A task has thrown an error.
-                this.workerMap[workerId].busy -= 1;
+            else if (msg.type === "task-error") { // Worker notifying master that a task has thrown an error.
+                this.workerMap[workerId].allocations -= 1;
                 const taskRecord = this.pendingTasks[msg.taskId];
                 this.verbose(`Task ${taskRecord.taskName} (${taskRecord.taskId}) has thrown error:`);
                 this.verbose(msg.error);
@@ -230,6 +286,29 @@ export class ClusterScheduler implements IScheduler {
                 taskRecord.reject(msg.error); // Reject the task's promise.
 
                 this.scheduleTasks(); // Worker is now free, schedule more tasks.
+            }
+            else if (msg.type === "queue-task") { // Worker requesting master to queue a task.
+
+                this.workerMap[msg.workerId].maxAllocations += 1; // When a worker requests a task be queued we increase its max allocations by 1 to help avoid deadlocks.
+
+                this.queueTask(msg.inputs, msg.taskId, msg.taskName)
+                    .then(result => {
+                        worker.send({
+                            type: "task-complete",
+                            taskId: msg.taskId,
+                            result,
+                        });
+                    })
+                    .catch(err => {
+                        worker.send({
+                            type: "task-error",
+                            taskId: msg.taskId,
+                            error: err && err.stack || err.toString(),
+                        });
+                    })
+                    .then(() => {
+                        this.workerMap[msg.workerId].maxAllocations -= 1;
+                    });
             }
             else {
                 throw new Error(`Unrecognised message ${msg.type} from worker.`);
@@ -246,13 +325,13 @@ export class ClusterScheduler implements IScheduler {
                 this.verbose("Exiting worker.");
                 process.exit(0); 
             }
-            else if (msg.type === "run-task") { // Masker has instructed the worker to run a task.
+            else if (msg.type === "run-task") { // Master has instructed the worker to run a task.
 
                 this.verbose(`Running task ${msg.taskName} (${msg.taskId}) on worker.`);
 
                 const taskDef = Task.lookup(msg.taskName); // Look up the task by name.
                 const taskFn = taskDef.getTaskFn();
-                taskFn(...msg.inputs) // Execute the task's function, passing in direct inputs.
+                taskFn(...msg.inputs, this) // Execute the task's function, passing in direct inputs.
                     .then(result => { // Worker completed sucessfully.
 
                         this.verbose(`Task ${msg.taskName} (${msg.taskId}) has completed on worker.`);
@@ -267,16 +346,31 @@ export class ClusterScheduler implements IScheduler {
                     .catch(err => { // Worker has thrown an error.
 
                         this.verbose(`Task ${msg.taskName} (${msg.taskId}) has errored on worker.`);
-                        this.verbose(err.toString());
+                        this.verbose(err && err.stack || err.toString());
 
                         process.send!({ // Tell the master the task has errored.
                             type: "task-error",
                             taskId: msg.taskId,
-                            error: err.toString(),
+                            error: err && err.stack || err.toString(),
                             workerId: process.env.WORKER_ID,
                         });
                     });
             }
+            else if (msg.type === "task-complete") { // Master telling process that a task it queued has completed.
+                const taskRecord = this.pendingTasks[msg.taskId];
+                this.verbose(`Task ${taskRecord.taskName} (${taskRecord.taskId}) has completed.`);
+
+                delete this.pendingTasks[msg.taskId];
+                taskRecord.resolve(msg.result); // Resolve the task's promise.
+            }
+            else if (msg.type === "task-error") { // Master telling process that a task it queued has errorred.
+                const taskRecord = this.pendingTasks[msg.taskId];
+                this.verbose(`Task ${taskRecord.taskName} (${taskRecord.taskId}) has thrown error:`);
+                this.verbose(msg.error);
+
+                delete this.pendingTasks[msg.taskId];
+                taskRecord.reject(msg.error); // Reject the task's promise.
+           }
             else {
                 throw new Error(`Unrecognised message ${msg.type} from master.`);
             }
@@ -294,7 +388,7 @@ export class ClusterScheduler implements IScheduler {
         }
 
         const freeWorkers = Object.keys(this.workerMap)
-            .filter(workerId => this.workerMap[workerId].busy <= 0)
+            .filter(workerId => this.workerMap[workerId].allocations < this.workerMap[workerId].maxAllocations)
             .map(workerId => this.workerMap[workerId]);
         if (freeWorkers.length <= 0) {
             // No worker is available.
@@ -306,7 +400,7 @@ export class ClusterScheduler implements IScheduler {
         this.pendingTasks[nextTask.taskId] = nextTask;
 
         const nextFreeWorker = freeWorkers[0]; // Get the next free worker.
-        ++nextFreeWorker.busy;
+        ++nextFreeWorker.allocations;
         this.verbose(`Scheduling task ${nextTask.taskName} (${nextTask.taskId}) on worker.`);
 
         nextFreeWorker.worker.send({ // Instruct the worker to run the task.
