@@ -6,6 +6,7 @@ node_modules/
 r.bat
 test/
 build/test/
+build/examples/
 todo.txt
 .nyc_output/
 tsconfig.json
