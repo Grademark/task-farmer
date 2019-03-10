@@ -11,6 +11,11 @@ export interface IClusterSchedulerOptions {
     // Enable verbose debug logging.
     //
     verbose?: boolean;
+
+    //
+    // Use this to set the maximum task allocations per worker.
+    //
+    maxAllocations?: number;
 }
 
 //
@@ -93,9 +98,14 @@ export interface ITaskMap {
 export class ClusterScheduler implements IScheduler {
 
     //
-    // Options to the cluster scheduler.
+    // Enable debug logging.
     //
-    private options: IClusterSchedulerOptions;
+    private enableVerboseLogging: boolean;
+
+    //
+    // Maximum tasks that can be allocated per worker at any one time.
+    //
+    private maxAllocations: number;
 
     //
     // Number of worker processes to create.
@@ -129,7 +139,8 @@ export class ClusterScheduler implements IScheduler {
 
     constructor(numWorkers: number, options?: IClusterSchedulerOptions) {
         this.numWorkers = numWorkers;
-        this.options = options || { verbose: false };
+        this.enableVerboseLogging = options && options.verbose || false;
+        this.maxAllocations = options && options.maxAllocations || 1;
     }
 
     //
@@ -150,7 +161,7 @@ export class ClusterScheduler implements IScheduler {
                     WORKER_ID: workerId,
                     WORKER_INDEX: workerIndex,
                 });
-                this.trackWorker(workerIndex, workerId, worker);
+                this.trackWorker(workerIndex, workerId, worker, this.maxAllocations);
             }
 
             await mainFn();
@@ -245,7 +256,7 @@ export class ClusterScheduler implements IScheduler {
     // Optional verbose logging.
     //
     private verbose(msg: any) {
-        if (this.options.verbose) {
+        if (this.enableVerboseLogging) {
             console.log(this.whoami + ": " + msg);
         }
     }
@@ -253,13 +264,13 @@ export class ClusterScheduler implements IScheduler {
     //
     // Track a worker process that was created.
     //
-    private trackWorker(workerIndex: number, workerId: string, worker: cluster.Worker) {
+    private trackWorker(workerIndex: number, workerId: string, worker: cluster.Worker, maxAllocations: number) {
         this.workers.push(worker);
         this.workerMap[workerId] = {
             workerIndex,
             workerId, 
             allocations: 0,
-            maxAllocations: 1, //TOOD: Should be able to pass this in.
+            maxAllocations,
             worker,
         };
 
