@@ -2,6 +2,7 @@ import * as cluster from "cluster";
 import { IScheduler } from "./scheduler";
 import { v4 as uuid } from "uuid";
 import { ITask, Task, TaskFn } from "./task";
+import { INSPECT_MAX_BYTES } from "buffer";
 
 //
 // Options to the cluster scheduler.
@@ -393,6 +394,10 @@ export class ClusterScheduler implements IScheduler {
     //
     private scheduleTask(): boolean {
 
+        if (!cluster.isMaster) {
+            throw new Error("Can only schedule tasks on the master.");
+        }
+
         if (this.taskQueue.length <= 0) {
             // No tasks to be executed.
             return false;
@@ -406,6 +411,9 @@ export class ClusterScheduler implements IScheduler {
             this.verbose("Task are ready, no workers are free.");
             return false;
         }
+
+        // Sort workers so that workers with less allocations come first.
+        freeWorkers.sort((worker1, worker2) => worker1.allocations - worker2.allocations);
 
         const nextTask = this.taskQueue.shift()!; // Remove the next task.
         this.pendingTasks[nextTask.taskId] = nextTask;
