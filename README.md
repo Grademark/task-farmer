@@ -301,6 +301,56 @@ The ability to mix and match tasks and direct values as inputs to other tasks gi
 
 All values (inputs and results) are transmitted between the master and worker processes via Node.js cluster IPC. As such all inputs to tasks and all outputs must be serializable to JSON. That's just a limitation of the system and requirement for how it works.
 
+### Execute multiple tasks in parallel
+
+You can run a collection of tasks in parallel using the function `Task.all` which is very similar in concept to `Promise.all`.
+
+For any array array of tasks you can call `Task.all` to evaluate them all in parallel and aggregate the results of each task into a list of values:
+
+```javascript
+const myTasks = [ /* your list of tasks */ ];
+const aggregateTask = Task.all(myTasks);
+```
+
+Once you have an aggregated a list of tasks you can use it as an input to another task:
+
+```javascript
+someDependentTask.create(aggregateTask);
+```
+
+In the previous snippet the tasks represented by `aggregateTask` will be evaluated in parallel, the result of which is aggregated into a single list and the list is passed an input to `someDependentTask`.
+
+You can also just run the `aggregateTask` to retreive the list of results:
+
+```javascript
+const resultList = await aggregateTask.run(scheduler);
+```
+
+### Running tasks from worker processes
+
+What happens when you have a worker process that needs to run tasks? Ideally your master process would identify all tasks and build your task graph, but this isn't always realistic, sometimes you need to delegate to your tasks to figure out what other tasks they depend on - for instance maybe they need to do some expensive computation before they can identify the nested tasks they depend on. 
+
+So, we need to be able to run tasks from both the master and the worker. Fortunately Task Farmer supports this and you don't have to worry about it.
+
+Say you have a task that's going to be evaluated on a worker process. Let's pretend this task can't know ahead of time whether it needs input from TaskA or TaskB:
+
+```javascript
+const myTask = tf.Task.register(
+    "my-task",
+    async (scheduler) => { // Note that the scheduler is always passed as the last parameter to all task functions.
+
+        if (/* some condition*/ ) { // Some conditional we use to decide to run one task or the other.
+            return await taskA.create().run(scheduler); // Create and run TaskA.
+        }
+        else {
+            return await taskB.create().run(scheduler); // Create and run TaskB.
+        }
+    }
+)
+```
+
+Note that the scheduler is passed as the last parameter to the task function. The task function then conditionaly run either TaskA or TaskC, but we don't know ahead of time which it will be. This task function runs on a worker process, yet it is the master process that coordinates the task queue, so how does this work? Well under the hood the scheduler knows that it is running on a worker and it sends a message to the master to queue any nested tasks.
+
 ## Future work
 
 At the moment I'm not planning anything new, but there's much that could be added - for example, a new scheduler that could distribute tasks over multiple PCs (instead of just multiple cores in the same PC).
