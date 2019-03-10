@@ -6,6 +6,10 @@ Need to learn data wrangling? See my book [Data Wrangling with JavaScript](http:
 
 Do prototyping and data analysis in JavaScript with [Data-Forge Notebook](http://www.data-forge-notebook.com/).
 
+## Complete examples 
+
+For complete runable examples please see [the Task Farmer examples repo](https://github.com/Grademark/task-farmer-examples).
+
 ## What is Task Farmer?
 
 I do a lot of work with data. I need to be able to transform and process large amounts of it as quickly as possible. One place this is evident is in my [Grademark API](https://www.npmjs.com/package/grademark) for backtesting and trading. [Simulating a stock trading strategy](http://www.the-data-wrangler.com/backtesting-trading-strategies-with-javascript/) for decades over thousands of companies requires some serious processing power.
