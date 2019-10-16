@@ -2,9 +2,7 @@
 
 A simple multi-core task scheduler that works well with promises. Great for doing parallel data processing.
 
-Need to learn data wrangling? See my book [Data Wrangling with JavaScript](http://bit.ly/2t2cJu2) or blog [The Data Wrangler](http://www.the-data-wrangler.com/).
-
-Do prototyping and data analysis in JavaScript with [Data-Forge Notebook](http://www.data-forge-notebook.com/).
+<a target="_blank" href="https://www.data-forge-notebook.com/"><img align="right" src="images/support1.png"></a>
 
 ## Complete examples 
 
@@ -17,6 +15,8 @@ I do a lot of work with data. I need to be able to transform and process large a
 I needed a way to divide up and process data to best make of my 16 core desktop PC. That resulted in a closed source code library that I used for many years. Now that I need that library for Grademark I've decided to build a simpler and better API and make it open source. The result of that work is this code repository.
 
 Task Farmer allows you to define a network of tasks and then evaluate the tasks in order. Where possible tasks are run in parallel on seperate CPU cores to make the best use of a multi-core PC.
+
+<a target="_blank" href="https://www.data-forge-notebook.com/"><img align="right" src="images/support2.png"></a>
 
 ## Aims of Task Farmer
 
