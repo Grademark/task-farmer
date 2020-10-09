@@ -2,7 +2,9 @@
 
 A simple multi-core task scheduler that works well with promises. Great for doing parallel data processing.
 
-<a target="_blank" href="https://www.data-forge-notebook.com/"><img align="right" src="images/support1.png"></a>
+<a href="#support-the-developer">Skip to the end to see how you can **support the developer.**</a>
+
+Love this? Please star this repo!
 
 ## Complete examples 
 
@@ -15,8 +17,6 @@ I do a lot of work with data. I need to be able to transform and process large a
 I needed a way to divide up and process data to best make of my 16 core desktop PC. That resulted in a closed source code library that I used for many years. Now that I need that library for Grademark I've decided to build a simpler and better API and make it open source. The result of that work is this code repository.
 
 Task Farmer allows you to define a network of tasks and then evaluate the tasks in order. Where possible tasks are run in parallel on seperate CPU cores to make the best use of a multi-core PC.
-
-<a target="_blank" href="https://www.data-forge-notebook.com/"><img align="right" src="images/support2.png"></a>
 
 ## Aims of Task Farmer
 
@@ -360,3 +360,19 @@ Note that the scheduler is passed as the last parameter to the task function. Th
 At the moment I'm not planning anything new, but there's much that could be added - for example, a new scheduler that could distribute tasks over multiple PCs (instead of just multiple cores in the same PC).
 
 If you want to contribute and extend this library please fork it, make changes and submit a pull request!
+
+## Support the developer 
+
+You can help support my work in any of the following ways:
+
+- [Follow the developer on Twitter](https://twitter.com/ashleydavis75)
+- Star this repository (and my other repos [here](https://github.com/data-forge), [here](https://github.com/grademark) and [here](https://github.com/data-forge-notebook)).
+- Share links to my work on Twitter and other social media.
+- [Sponsor me on GitHub](https://github.com/sponsors/ashleydavis).
+- Purchase [Data-Forge Notebook](https://www.data-forge-notebook.com/).
+- Purchase either of my books [Data Wrangling with JavaScript](http://bit.ly/2t2cJu2) or [Bootsrapping Microservices](http://bit.ly/2o0aDsP).
+
+<a target="_blank" href="https://www.data-forge-notebook.com/"><img src="images/support1.png"></a>
+
+<a target="_blank" href="https://www.data-forge-notebook.com/"><img src="images/support2.png"></a>
+
