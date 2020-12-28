@@ -2,7 +2,7 @@
 
 A simple multi-core task scheduler that works well with promises. Great for doing parallel data processing.
 
-<a href="#support-the-developer">Skip to the end to see how you can **support the developer.**</a>
+<a target="_blank" href="http://www.codecapers.com.au/#support-my-work">Click here to **support the developer.**</a>
 
 Love this? Please star this repo!
 
@@ -363,19 +363,6 @@ If you want to contribute and extend this library please fork it, make changes a
 
 ## Support the developer 
 
-You can help support my work in any of the following ways:
-
-- [Follow the developer on Twitter](https://twitter.com/ashleydavis75)
-- Star this repository (and my other repos [here](https://github.com/data-forge), [here](https://github.com/grademark) and [here](https://github.com/data-forge-notebook)).
-- Share links to my work on Twitter and other social media.
-- [Sponsor me on GitHub](https://github.com/sponsors/ashleydavis).
-- Purchase [Data-Forge Notebook](https://www.data-forge-notebook.com/).
-- Purchase either of my books [Data Wrangling with JavaScript](http://bit.ly/2t2cJu2) or [Bootstrapping Microservices](http://bit.ly/2o0aDsP).
-
-<a target="_blank" href="https://www.data-forge-notebook.com/"><img src="images/support1.png"></a>
-
-<a target="_blank" href="http://bit.ly/2o0aDsP"><img src="images/support3.png"></a>
-
-<a target="_blank" href="http://bit.ly/2t2cJu2"><img src="images/support2.png"></a>
+<a target="_blank" href="http://www.codecapers.com.au/#support-my-work">Click here to **support the developer.**</a>
 
 
