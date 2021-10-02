@@ -2,7 +2,7 @@
 
 A simple multi-core task scheduler that works well with promises. Great for doing parallel data processing.
 
-<a target="_blank" href="http://www.codecapers.com.au/about#support-my-work">Click here to **support the developer.**</a>
+[Click here to support my work](https://www.codecapers.com.au/about#support-my-work)
 
 Love this? Please star this repo!
 
